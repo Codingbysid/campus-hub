@@ -1,0 +1,63 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users:
+    // - Anyone can create (signup)
+    // - Authenticated users can read their own profile
+    // - Authenticated users can update their own profile
+    // - No one can delete user profiles through client (handle via admin/functions)
+    match /users/{userId} {
+      allow create: if true;
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false; 
+    }
+
+    // Marketplace Items:
+    // - Anyone can read marketplace items (for browsing)
+    // - Authenticated users can create new items
+    // - Authenticated users can update/delete their own items
+    match /marketplaceItems/{itemId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.sellerId == request.auth.uid;
+    }
+
+    // Lost and Found Items:
+    // - Anyone can read lost and found items
+    // - Authenticated users can create new items
+    // - Authenticated users can update/delete their own reported items
+    //   (Consider adding a 'status' field and allowing updates to that by anyone for 'resolved')
+    match /lostAndFoundItems/{itemId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      // reporterId should be set on create to the user's UID
+      allow update, delete: if request.auth != null && resource.data.reporterId == request.auth.uid;
+    }
+
+    // Ticket Listings:
+    // - Anyone can read ticket listings
+    // - Authenticated users can create new listings
+    // - Authenticated users can update/delete their own listings
+    match /ticketListings/{listingId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      // sellerId should be set on create to the user's UID
+      allow update, delete: if request.auth != null && resource.data.sellerId == request.auth.uid;
+    }
+
+    // Campus Events:
+    // - Anyone can read campus events
+    // - Authenticated users can create new events (or specific roles if you implement roles)
+    // - Authenticated users can update/delete events they organized
+    match /campusEvents/{eventId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      // organizerId should be set on create to the user's UID
+      allow update, delete: if request.auth != null && resource.data.organizerId == request.auth.uid;
+    }
+
+  }
+}
