@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -52,17 +52,18 @@ export default function ListTicketPage() {
     },
   });
 
-  if (authLoading) {
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login?redirect=/ticket-exchange/list');
+    }
+  }, [user, authLoading, router]);
+
+  if (authLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
-  }
-
-  if (!user) {
-    router.push('/login?redirect=/ticket-exchange/list');
-    return null;
   }
 
   const onSubmit: SubmitHandler<TicketListingFormValues> = async (data) => {

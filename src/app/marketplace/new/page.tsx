@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,10 +12,13 @@ import PageHeader from '@/components/common/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Loader2, ShoppingBag } from 'lucide-react';
+import { Loader2, ShoppingBag, Sparkles, BrainCircuit } from 'lucide-react';
+
+// AI Flow imports
+import { generateDescription } from '@/ai/flows/generate-description-flow';
+import { suggestTagsAndCategory } from '@/ai/flows/suggest-tags-and-category-flow';
 
 const marketplaceItemSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(100),
@@ -34,6 +37,8 @@ export default function PostNewMarketplaceItemPage() {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingDesc, setIsGeneratingDesc] = useState(false);
+  const [isSuggesting, setIsSuggesting] = useState(false);
 
   const form = useForm<MarketplaceItemFormValues>({
     resolver: zodResolver(marketplaceItemSchema),
@@ -48,18 +53,81 @@ export default function PostNewMarketplaceItemPage() {
     },
   });
 
-  if (authLoading) {
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login?redirect=/marketplace/new');
+    }
+  }, [user, authLoading, router]);
+
+  if (authLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
+  
+  const handleGenerateDescription = async () => {
+    setIsGeneratingDesc(true);
+    try {
+      const { title, category } = form.getValues();
+      if (!title || !category) {
+        toast({
+          title: 'Title and Category Needed',
+          description: 'Please fill in the title and category fields before generating a description.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      const description = await generateDescription({ title, category });
+      form.setValue('description', description, { shouldValidate: true });
+      toast({
+        title: 'Description Generated!',
+        description: 'The AI-powered description has been added.',
+      });
+    } catch (error) {
+      console.error('Error generating description:', error);
+      toast({
+        title: 'Generation Failed',
+        description: 'The AI could not generate a description at this time.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingDesc(false);
+    }
+  };
+  
+  const handleGenerateSuggestions = async () => {
+    setIsSuggesting(true);
+    try {
+      const { title, description } = form.getValues();
+       if (!title || !description) {
+        toast({
+          title: 'Title and Description Needed',
+          description: 'Please fill in the title and description fields before generating suggestions.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      const { category, tags } = await suggestTagsAndCategory({ title, description });
+      form.setValue('category', category, { shouldValidate: true });
+      form.setValue('tags', tags.join(', '), { shouldValidate: true });
+       toast({
+        title: 'Suggestions Added!',
+        description: 'The AI has suggested a category and tags for your item.',
+      });
+    } catch (error) {
+       console.error('Error generating suggestions:', error);
+      toast({
+        title: 'Suggestion Failed',
+        description: 'The AI could not generate suggestions at this time.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
 
-  if (!user) {
-    router.push('/login?redirect=/marketplace/new');
-    return null;
-  }
 
   const onSubmit: SubmitHandler<MarketplaceItemFormValues> = async (data) => {
     setIsSubmitting(true);
@@ -132,7 +200,23 @@ export default function PostNewMarketplaceItemPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Description</FormLabel>
+                       <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleGenerateDescription}
+                        disabled={isGeneratingDesc}
+                      >
+                        {isGeneratingDesc ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="mr-2 h-4 w-4" />
+                        )}
+                        Generate with AI
+                      </Button>
+                    </div>
                     <FormControl>
                       <Textarea placeholder="e.g., Comfortable cotton graphic tee, size M. Lightly worn." {...field} rows={4} />
                     </FormControl>
@@ -141,14 +225,14 @@ export default function PostNewMarketplaceItemPage() {
                 )}
               />
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <FormField
+                 <FormField
                   control={form.control}
                   name="category"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Category</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Apparel, Electronics, Textbooks" {...field} />
+                        <Input placeholder="e.g., Clothing, Textbook, Furniture" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -161,7 +245,7 @@ export default function PostNewMarketplaceItemPage() {
                     <FormItem>
                       <FormLabel>Price</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., $15.00 or 15" {...field} />
+                        <Input placeholder="e.g., $10.99 or 10.99" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -173,9 +257,25 @@ export default function PostNewMarketplaceItemPage() {
                 name="tags"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tags (comma-separated)</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Tags (comma-separated)</FormLabel>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleGenerateSuggestions}
+                        disabled={isSuggesting}
+                      >
+                        {isSuggesting ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <BrainCircuit className="mr-2 h-4 w-4" />
+                        )}
+                        Suggest Tags & Category
+                      </Button>
+                    </div>
                     <FormControl>
-                      <Input placeholder="e.g., vintage, cotton, study" {...field} />
+                      <Input placeholder="e.g., vintage, size m, textbook" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -194,7 +294,7 @@ export default function PostNewMarketplaceItemPage() {
                   </FormItem>
                 )}
               />
-               <FormField
+              <FormField
                 control={form.control}
                 name="imageHint"
                 render={({ field }) => (
