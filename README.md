@@ -66,7 +66,6 @@ The application requires environment variables for both Firebase and the Gemini 
    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="campus-link-42f69.firebasestorage.app"
    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="602936684655"
    NEXT_PUBLIC_FIREBASE_APP_ID="1:602936684655:web:2bdedd456cbc7061735d9a"
-
    # Optional: Set to true if you plan to use Firebase Emulators
    NEXT_PUBLIC_USE_EMULATORS=true
    GEMINI_API_KEY=AIzaSyDPt0pYKvL7G21dQyDoIAJCgJqjlgVb_80
