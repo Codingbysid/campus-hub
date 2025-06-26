@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "campus-link-42f69"
-  }
+    "default": "campus-link-42f69",
+    "production": "campus-link-42f69"
+  },
+  "targets": {},
+  "etags": {}
 }
