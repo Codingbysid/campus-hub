@@ -60,12 +60,16 @@ The application requires environment variables for both Firebase and the Gemini 
 2.  **Add Firebase Keys**: Go to your [Firebase Project Settings](https://console.firebase.google.com/project/campus-link-42f69/settings/general) and under "Your apps", find your web app. Click the "SDK setup and configuration" and select "Config". Copy the key-value pairs into your `.env.local` file like this:
 
     ```plaintext
-    NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-auth-domain
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-storage-bucket
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
-    NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
+   NEXT_PUBLIC_FIREBASE_API_KEY="AIzaSyDIh6gnBbSVaTLC5CqYfFDfnQ1NK-ipKko"
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="campus-link-42f69.firebaseapp.com"
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID="campus-link-42f69"
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="campus-link-42f69.firebasestorage.app"
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="602936684655"
+   NEXT_PUBLIC_FIREBASE_APP_ID="1:602936684655:web:2bdedd456cbc7061735d9a"
+
+   # Optional: Set to true if you plan to use Firebase Emulators
+   NEXT_PUBLIC_USE_EMULATORS=true
+   GEMINI_API_KEY=AIzaSyDPt0pYKvL7G21dQyDoIAJCgJqjlgVb_80
     ```
 
 3.  **Add Gemini API Key**:
