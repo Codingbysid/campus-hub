@@ -1,4 +1,3 @@
-
 # CampusLink: Your AI-Powered Campus Hub
 
 Welcome to the CampusLink developer guide! This document provides all the necessary instructions to get the project up and running on your local machine for development and contribution.
@@ -88,6 +87,8 @@ To run the full application with all features, you need to run both the Next.js 
 
 ### Step 1: Start the Firebase Emulators
 
+**IMPORTANT**: The emulators must be started BEFORE running the Next.js app to avoid connection errors.
+
 The emulators create a local environment that mimics Firebase services (Auth and Firestore). This allows you to develop without affecting live production data.
 
 In a new terminal window, run:
@@ -96,13 +97,24 @@ firebase emulators:start
 ```
 This will start the emulators and provide you with a link to the Emulator Suite UI, which is very helpful for viewing the local database and authenticated users.
 
+**Wait for the emulators to fully start** before proceeding to the next step. You should see output indicating that both Auth and Firestore emulators are running.
+
 ### Step 2: Run the Next.js App
 
-In another terminal window, run:
+**Only after the Firebase emulators are running**, in another terminal window, run:
 ```bash
 npm run dev
 ```
-This command starts the Next.js development server, which automatically connects to the running Firebase emulators. You can now open your browser to `http://localhost:3000` to see the application.
+This command starts the Next.js development server, which automatically connects to the running Firebase emulators. You can now open your browser to `http://localhost:9002` to see the application.
+
+### Troubleshooting Connection Issues
+
+If you encounter Firebase connection errors:
+
+1. **Ensure emulators are running**: Check that `firebase emulators:start` is active in a separate terminal
+2. **Check emulator ports**: Verify that ports 8080 (Firestore) and 9099 (Auth) are not being used by other applications
+3. **Restart in correct order**: Stop both processes, start emulators first, then start the Next.js app
+4. **Check environment variables**: Ensure `NEXT_PUBLIC_USE_EMULATORS=true` is set in your `.env.local` file
 
 ---
 

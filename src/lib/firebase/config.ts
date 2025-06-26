@@ -1,4 +1,3 @@
-
 import { initializeApp, getApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
@@ -35,13 +34,21 @@ const useEmulators = process.env.NEXT_PUBLIC_USE_EMULATORS === 'true';
 if (useEmulators && (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test')) {
   try {
     console.log("[Firebase Config] Connecting to Firebase Emulators...");
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-    connectFirestoreEmulator(db, 'localhost', 8080);
+    
+    // Check if emulators are already connected to avoid duplicate connections
+    if (!(auth as any)._delegate?._config?.emulator) {
+      connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    }
+    
+    if (!(db as any)._delegate?._databaseId?.projectId?.includes('demo-')) {
+      connectFirestoreEmulator(db, 'localhost', 8080);
+    }
+    
     // connectStorageEmulator(storage, 'localhost', 9199); // If you use Firebase Storage
     console.log("[Firebase Config] Successfully connected to Firebase Emulators: Auth (9099), Firestore (8080)");
   } catch (error) {
     console.error("[Firebase Config] Error connecting to Firebase Emulators: ", error);
-    console.log("[Firebase Config] Ensure Firebase Emulators are running. Run 'firebase emulators:start'");
+    console.log("[Firebase Config] Ensure Firebase Emulators are running. Run 'firebase emulators:start' in a separate terminal");
   }
 } else {
     console.log("[Firebase Config] Connecting to LIVE Firebase project.");
