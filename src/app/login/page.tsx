@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, LogInIcon } from 'lucide-react';
+import { Suspense } from 'react';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
@@ -24,8 +25,9 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -43,7 +45,10 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
       toast({ title: 'Login Successful!', description: "Welcome back!" });
-      router.push('/'); // Redirect to homepage or dashboard
+      
+      // Check for redirect parameter
+      const redirect = searchParams?.get('redirect');
+      router.push(redirect || '/'); // Redirect to specified page or homepage
     } catch (error: any) {
       console.error('Login error:', error);
       toast({
@@ -91,6 +96,8 @@ export default function LoginPage() {
                         <Input placeholder="••••••••" {...field} type={showPassword ? 'text' : 'password'} />
                         <Button
                           type="button"
+                          variant="ghost"
+                          size="icon"
                           className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-muted-foreground"
                           onClick={() => setShowPassword(!showPassword)}
                         >
@@ -121,5 +128,17 @@ export default function LoginPage() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

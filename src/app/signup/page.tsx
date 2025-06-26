@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Eye, EyeOff } from 'lucide-react';
+import { Suspense } from 'react';
 
 const signupSchema = z.object({
   displayName: z.string().min(2, { message: 'Display name must be at least 2 characters.' }).max(50),
@@ -26,8 +27,9 @@ const signupSchema = z.object({
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -64,7 +66,10 @@ export default function SignupPage() {
       });
 
       toast({ title: 'Signup Successful!', description: "Welcome to CampusLink!" });
-      router.push('/'); // Redirect to homepage or dashboard
+      
+      // Check for redirect parameter
+      const redirect = searchParams?.get('redirect');
+      router.push(redirect || '/'); // Redirect to specified page or homepage
     } catch (error: any) {
       console.error('Signup error:', error);
       toast({
@@ -157,3 +162,14 @@ export default function SignupPage() {
   );
 }
 
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
+  );
+}
